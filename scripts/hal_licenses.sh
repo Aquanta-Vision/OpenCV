@@ -9,13 +9,11 @@
 installHalLicenses() {
   local opencv_dir="$1" build_dir="$2" licenses_dir="$3"
   local build_info="$build_dir/modules/core/version_string.inc"
-  local kleidicv_license
   if grep -q '3rdparty dependencies:.* tegra_hal' "$build_info"; then
     sed -n '2,/^ \*\//p' "$opencv_dir/hal/carotene/src/add.cpp" | sed -e '$d' -e 's/^ \* \{0,1\}//' \
       > "$licenses_dir/carotene-LICENSE"
   fi
-  kleidicv_license="$(find "$build_dir/3rdparty/kleidicv" -path '*/LICENSES/Apache-2.0.txt' 2>/dev/null | head -1)"
-  if [ -n "$kleidicv_license" ]; then
-    cp "$kleidicv_license" "$licenses_dir/kleidicv-LICENSE"
+  if grep -q '3rdparty dependencies:.* kleidicv' "$build_info"; then
+    cp "$build_dir"/3rdparty/kleidicv/kleidicv-*/LICENSES/Apache-2.0.txt "$licenses_dir/kleidicv-LICENSE"
   fi
 }
