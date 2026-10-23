@@ -23,7 +23,7 @@ usePublicUbuntuMirror() {
 # nasm builds libjpeg-turbo's SIMD code; GTK3 headers are for highgui on x86_64 only (SPEC O2).
 # aarch64 runs on Ubuntu 18.04, whose CMake (3.10) and GCC (7.5) are both older than KleidiCV
 # needs, so it gets gcc-8 and a pinned CMake release instead. cortexa9t2hf uses the Poky SDK's
-# cross compiler, a pinned CMake, and qemu-user to run the cross-built audit program.
+# cross compiler and CMake (3.19), and qemu-user to run the cross-built audit program.
 # OpenCV picks up ccache on its own; the workflow persists CCACHE_DIR between runs.
 installBuildTools() {
   local packages=(build-essential ninja-build pkg-config file ccache)
@@ -32,7 +32,7 @@ installBuildTools() {
     aarch64) packages+=(gcc-8 g++-8 curl ca-certificates) ;;
     cortexa9t2hf)
       usePublicUbuntuMirror
-      packages+=(qemu-user curl ca-certificates)
+      packages+=(qemu-user)
       ;;
   esac
   export DEBIAN_FRONTEND=noninteractive
@@ -42,7 +42,7 @@ installBuildTools() {
 
 # A CMake release for the build machine's architecture, pinned in opencv.env.
 installPinnedCmake() {
-  [ "$target" != x86_64 ] || return 0
+  [ "$target" = aarch64 ] || return 0
   local arch tarball sha256_var
   arch="$(uname -m)"
   tarball=/tmp/cmake.tar.gz

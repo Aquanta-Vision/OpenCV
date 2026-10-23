@@ -27,12 +27,13 @@ build_dir="$source_root/build-$platform"
 
 # x86_64: IPP, and GTK3 from the system for highgui (never shipped).
 # aarch64: headless, KleidiCV (SPEC O5); IPP is x86 only.
-# cortexa9t2hf: headless, NEON with Carotene (KleidiCV is aarch64 only).
+# cortexa9t2hf: headless; NEON (from the SDK's -mfpu=neon) with Carotene. KleidiCV is aarch64
+# only.
 selectPlatformFlags() {
   case "$target" in
     x86_64) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=ON -DWITH_GTK=ON -DWITH_GTK_2_X=OFF) ;;
     aarch64) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=OFF -DWITH_GTK=OFF -DWITH_KLEIDICV=ON) ;;
-    cortexa9t2hf) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=OFF -DWITH_GTK=OFF -DENABLE_NEON=ON) ;;
+    cortexa9t2hf) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=OFF -DWITH_GTK=OFF) ;;
     *)
       echo "Unsupported linux target: $target" >&2
       exit 1
@@ -40,7 +41,7 @@ selectPlatformFlags() {
   esac
 }
 
-# CMake's own error output names the failing check; the details are in its configure log.
+# CMake prints its errors itself; its check log is mostly expected failures, so it isn't dumped.
 configureOpencv() {
   CMAKE_FLAGS=(
     -G Ninja
@@ -50,10 +51,7 @@ configureOpencv() {
     "${COMMON_CMAKE_FLAGS[@]}"
     "${PLATFORM_CMAKE_FLAGS[@]}"
   )
-  cmake -S "$opencv_dir" -B "$build_dir" "${CMAKE_FLAGS[@]}" || {
-    tail -n 60 "$build_dir"/CMakeFiles/CMake{Error.log,ConfigureLog.yaml} 2>/dev/null
-    exit 1
-  }
+  cmake -S "$opencv_dir" -B "$build_dir" "${CMAKE_FLAGS[@]}"
 }
 
 compileAndInstall() {

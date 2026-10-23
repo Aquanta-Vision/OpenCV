@@ -7,6 +7,7 @@
 
 poky_env=/opt/poky/3.3-cortexa9t2hf/environment-setup-cortexa9t2hf-neon-oe-linux-gnueabi
 poky_cross_prefix=arm-oe-linux-gnueabi-
+poky_toolchain_file="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/poky_toolchain.cmake"
 
 requireNativeMachine() {
   [ "$(uname -m)" = "$1" ] || {
@@ -16,11 +17,16 @@ requireNativeMachine() {
 }
 
 # The SDK script reads LD_LIBRARY_PATH before setting it, so nounset is off while sourcing.
+# Its default CFLAGS/CXXFLAGS carry -g, which would put debug info into the published static
+# libraries; no other platform ships it.
 loadPokySdk() {
   set +u
   # shellcheck disable=SC1090
   source "$poky_env"
   set -u
+  CFLAGS="$(echo " $CFLAGS " | sed 's/ -g / /g')"
+  CXXFLAGS="$(echo " $CXXFLAGS " | sed 's/ -g / /g')"
+  export CFLAGS CXXFLAGS
 }
 
 # Sets TARGET_CC, TARGET_CXX, TARGET_READELF, TARGET_RUNNER (the command prefix that runs a
@@ -53,7 +59,7 @@ loadLinuxToolchain() {
       TARGET_CXX="$CXX"
       TARGET_READELF="${poky_cross_prefix}readelf"
       TARGET_RUNNER=(qemu-arm -L "$SDKTARGETSYSROOT")
-      TARGET_CMAKE_FLAGS=(-DCMAKE_TOOLCHAIN_FILE="$OE_CMAKE_TOOLCHAIN_FILE")
+      TARGET_CMAKE_FLAGS=(-DCMAKE_TOOLCHAIN_FILE="$poky_toolchain_file")
       ;;
     *)
       echo "Unsupported linux target: $1" >&2
