@@ -11,8 +11,9 @@ source_root="$2"
 out_dir="$3"
 
 # nasm builds libjpeg-turbo's SIMD code; GTK3 headers are for highgui on x86_64 only (SPEC O2).
+# OpenCV picks up ccache on its own; the workflow persists CCACHE_DIR between runs.
 installBuildTools() {
-  local packages=(build-essential cmake ninja-build pkg-config file)
+  local packages=(build-essential cmake ninja-build pkg-config file ccache)
   case "$target" in
     x86_64) packages+=(nasm libgtk-3-dev) ;;
   esac
@@ -23,4 +24,5 @@ installBuildTools() {
 
 installBuildTools
 "$script_dir/build_linux.sh" "$target" "$source_root" "$out_dir"
+ccache --show-stats
 "$script_dir/audit_linux.sh" "$target" "$out_dir"

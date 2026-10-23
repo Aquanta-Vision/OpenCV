@@ -49,13 +49,21 @@ jobs:
           tar -xJf *-source.tar.xz
           echo "SOURCE_ROOT=$(ls -d pam-opencv-*/)" >> "$GITHUB_ENV"
 
+      # A new key per run so every run saves its cache; restore takes the newest one. ccache
+      # checks every hit against the preprocessed source and compiler, so stale entries can't leak in.
+      - uses: actions/cache@v6
+        with:
+          path: .ccache
+          key: ccache-linux-${{ matrix.target }}-${{ github.run_id }}
+          restore-keys: ccache-linux-${{ matrix.target }}-
+
       - name: Build and audit in ${{ matrix.image }}
         run: |
-          docker run --rm -v "$PWD:/work" -w /work ${{ matrix.image }} \
+          docker run --rm -v "$PWD:/work" -w /work -e CCACHE_DIR=/work/.ccache -e CCACHE_MAXSIZE=1G ${{ matrix.image }} \
             bash "${SOURCE_ROOT}pam-build/scripts/ci_linux.sh" ${{ matrix.target }} "$SOURCE_ROOT" out/linux-${{ matrix.target }}
 
       - name: Package
-        run: tar -cJf "${SOURCE_ROOT%/}-linux-${{ matrix.target }}.tar.xz" -C out linux-${{ matrix.target }}
+        run: XZ_OPT=-T0 tar -cJf "${SOURCE_ROOT%/}-linux-${{ matrix.target }}.tar.xz" -C out linux-${{ matrix.target }}
 
       - uses: actions/upload-artifact@v7
         with:
