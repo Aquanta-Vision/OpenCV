@@ -5,6 +5,10 @@ name: Release
 # Tag format: opencv-<OPENCV_VERSION>-pam.<N>, e.g. opencv-4.14.0-pam.1.
 on:
   workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Platform jobs to run on a dispatch: all, or a list of linux, windows, android, apple'
+        default: all
   push:
     tags: ['opencv-*']
 
@@ -34,6 +38,7 @@ jobs:
   # docker run instead of a job container: Node 24 actions don't run on Ubuntu 18.04's glibc.
   linux:
     needs: source
+    if: inputs.platforms == '' || inputs.platforms == 'all' || contains(inputs.platforms, 'linux')
     strategy:
       fail-fast: false
       matrix:
@@ -94,6 +99,7 @@ jobs:
   # audited on an arm64 runner in windows-arm64-audit.
   windows:
     needs: source
+    if: inputs.platforms == '' || inputs.platforms == 'all' || contains(inputs.platforms, 'windows')
     strategy:
       fail-fast: false
       matrix:
@@ -160,6 +166,7 @@ jobs:
   # NDK and API level pinned in opencv.env to match PAM's Android build.
   android:
     needs: source
+    if: inputs.platforms == '' || inputs.platforms == 'all' || contains(inputs.platforms, 'android')
     strategy:
       fail-fast: false
       matrix:
@@ -199,6 +206,7 @@ jobs:
   # device and simulator slices into one archive. Same macOS image as PAM's Apple jobs.
   apple:
     needs: source
+    if: inputs.platforms == '' || inputs.platforms == 'all' || contains(inputs.platforms, 'apple')
     strategy:
       fail-fast: false
       matrix:

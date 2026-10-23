@@ -17,16 +17,25 @@ staticLibraries() {
   (cd "$1" && find lib -name '*.a' | sort)
 }
 
+# The only expected difference: libpng's arm64 build adds NEON assembly, so its link interface
+# languages read "ASM;C" there and "C" on x86_64. The language only picks the link driver, where
+# C/C++ outrank ASM, so the arm64 value is right for both slices. Prints a copy of the slice's
+# CMake package with that difference removed.
+comparableCmakePackage() {
+  local copy
+  copy="$(mktemp -d)"
+  cp -R "$1/lib/cmake" "$copy/"
+  find "$copy" -name '*.cmake' -exec sed -i.orig 's/LANGUAGES_RELEASE "ASM;C"/LANGUAGES_RELEASE "C"/' {} +
+  find "$copy" -name '*.orig' -delete
+  echo "$copy/cmake"
+}
+
 checkSlicesMatch() {
   diff <(staticLibraries "$arm64_dir") <(staticLibraries "$x86_64_dir") || {
     echo "macOS slices link different libraries" >&2
     exit 1
   }
-  # The only expected difference: libpng's arm64 build adds NEON assembly, so its link interface
-  # languages read "ASM;C" there and "C" on x86_64. The language only picks the link driver,
-  # where C/C++ outrank ASM, so the arm64 value is right for both slices.
-  diff -r -I 'IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "\(ASM;\)\{0,1\}C"' \
-    "$arm64_dir/lib/cmake" "$x86_64_dir/lib/cmake" || {
+  diff -r "$(comparableCmakePackage "$arm64_dir")" "$(comparableCmakePackage "$x86_64_dir")" || {
     echo "macOS slices generated different CMake packages" >&2
     exit 1
   }
