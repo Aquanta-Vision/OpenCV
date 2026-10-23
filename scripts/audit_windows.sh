@@ -30,7 +30,7 @@ cmakePath() {
 selectExpectations() {
   case "$target" in
     x64) expected_hal=ipp ;;
-    arm64) expected_hal= ;;
+    arm64) expected_hal=carotene ;;
     *)
       echo "Unsupported windows target: $target" >&2
       exit 1
@@ -53,9 +53,9 @@ runOpencvAudit() {
   "$audit_bin" WIN32UI || fail "OpenCV audit"
 }
 
-# The acceleration library the spec chose for this target (O4) must actually be in use.
+# The acceleration library for this target (IPP per SPEC O4, Carotene by OpenCV default on
+# arm64) must actually be in use.
 checkHal() {
-  [ -n "$expected_hal" ] || return 0
   grep -E '^ *Custom HAL:' "$platform_dir/BUILDINFO.txt" | grep -q "$expected_hal" ||
     fail "custom HAL $expected_hal not in use: $(grep -E '^ *Custom HAL:' "$platform_dir/BUILDINFO.txt")"
 }
