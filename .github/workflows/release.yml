@@ -27,7 +27,7 @@ jobs:
 
   # Built from the source archive, not the checkout, so the published source matches the binaries.
   # Each build runs in a container with the oldest glibc among that target's PAM consumers:
-  # Ubuntu 22.04 for x86_64.
+  # Ubuntu 22.04 for x86_64, Ubuntu 18.04 (SLA camera) for aarch64 on a native arm runner.
   # docker run instead of a job container: Node 24 actions don't run on Ubuntu 18.04's glibc.
   linux:
     needs: source
@@ -38,6 +38,9 @@ jobs:
           - target: x86_64
             runner: ubuntu-24.04
             image: ubuntu:22.04
+          - target: aarch64
+            runner: ubuntu-24.04-arm
+            image: ubuntu:18.04
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/download-artifact@v8

@@ -27,13 +27,27 @@ selectExpectations() {
   case "$target" in
     x86_64)
       expected_gui=GTK3
+      expected_hal=ipp
       allowed_deps_pattern="^($runtime_deps|$gtk3_deps)\.so"
+      ;;
+    aarch64)
+      expected_gui=NONE
+      expected_hal=KleidiCV
+      allowed_deps_pattern="^($runtime_deps)\.so"
       ;;
     *)
       expected_gui=NONE
+      expected_hal=
       allowed_deps_pattern="^($runtime_deps)\.so"
       ;;
   esac
+}
+
+# The acceleration library the spec chose for this target (O4, O5) must actually be in use.
+checkHal() {
+  [ -n "$expected_hal" ] || return 0
+  grep -E '^ *Custom HAL:' "$platform_dir/BUILDINFO.txt" | grep -q "$expected_hal" ||
+    fail "custom HAL $expected_hal not in use: $(grep -E '^ *Custom HAL:' "$platform_dir/BUILDINFO.txt")"
 }
 
 buildAuditProgram() {
@@ -85,6 +99,7 @@ loadLinuxToolchain "$target"
 selectExpectations
 buildAuditProgram
 runOpencvAudit
+checkHal
 checkNoPluginsOrFfmpeg
 checkStaticOnly
 checkNoExecutables

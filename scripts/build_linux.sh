@@ -24,11 +24,11 @@ opencv_dir="$source_root/opencv-${OPENCV_VERSION}"
 build_dir="$source_root/build-$platform"
 
 # x86_64: IPP, and GTK3 from the system for highgui (never shipped).
-# aarch64: headless; IPP is x86 only.
+# aarch64: headless, KleidiCV (SPEC O5); IPP is x86 only.
 selectPlatformFlags() {
   case "$target" in
     x86_64) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=ON -DWITH_GTK=ON -DWITH_GTK_2_X=OFF) ;;
-    aarch64) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=OFF -DWITH_GTK=OFF) ;;
+    aarch64) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=OFF -DWITH_GTK=OFF -DWITH_KLEIDICV=ON) ;;
     *)
       echo "Unsupported linux target: $target" >&2
       exit 1

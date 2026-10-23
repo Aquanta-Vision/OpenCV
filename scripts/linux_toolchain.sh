@@ -27,10 +27,19 @@ loadPokySdk() {
 # target binary).
 loadLinuxToolchain() {
   case "$1" in
-    x86_64 | aarch64)
+    x86_64)
       requireNativeMachine "$1"
       TARGET_CC=cc
       TARGET_CXX=c++
+      TARGET_READELF=readelf
+      TARGET_RUNNER=(env)
+      ;;
+    # Ubuntu 18.04's default GCC 7.5 is older than KleidiCV's minimum (8.4); gcc-8 comes from the
+    # same release's archive and shares its libstdc++.so.6, so the glibc floor is unchanged.
+    aarch64)
+      requireNativeMachine "$1"
+      TARGET_CC=gcc-8
+      TARGET_CXX=g++-8
       TARGET_READELF=readelf
       TARGET_RUNNER=(env)
       ;;

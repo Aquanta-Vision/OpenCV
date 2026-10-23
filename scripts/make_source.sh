@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Assembles the release source archive: the pristine upstream OpenCV tree, the IPP ICV packages
-# OpenCV would otherwise download at configure time, and this repo's build scripts. Every platform
+# Assembles the release source archive: the pristine upstream OpenCV tree, the IPP ICV and
+# KleidiCV packages OpenCV would otherwise download at configure time, and this repo's build
+# scripts. Every platform
 # build starts from this archive, so the published source always matches the published binaries.
 #
 # Usage: scripts/make_source.sh <out_dir>
@@ -25,16 +26,20 @@ fetchOpencv() {
 # OpenCV looks for downloads in OPENCV_DOWNLOAD_PATH as <id>/<md5>-<file name> before going to the
 # network, so a pre-filled cache keeps the builds offline. The MD5 is OpenCV's own check; the
 # SHA256 in opencv.env is ours.
-fetchIppicv() {
-  local path="$1" sha256="$2"
+fetchIntoDownloadCache() {
+  local id="$1" url="$2" sha256="$3"
   local name file md5
-  name="$(basename "$path")"
+  name="$(basename "$url")"
   file="$work_dir/$name"
-  curl -sSfL "https://raw.githubusercontent.com/opencv/opencv_3rdparty/$path" -o "$file"
+  curl -sSfL "$url" -o "$file"
   echo "$sha256  $file" | sha256sum --check --strict
   md5="$(md5sum "$file" | cut -d' ' -f1)"
-  mkdir -p "$stage_dir/opencv-downloads/ippicv"
-  mv "$file" "$stage_dir/opencv-downloads/ippicv/$md5-$name"
+  mkdir -p "$stage_dir/opencv-downloads/$id"
+  mv "$file" "$stage_dir/opencv-downloads/$id/$md5-$name"
+}
+
+fetchIppicv() {
+  fetchIntoDownloadCache ippicv "https://raw.githubusercontent.com/opencv/opencv_3rdparty/$1" "$2"
 }
 
 fetchAllIppicv() {
@@ -42,6 +47,13 @@ fetchAllIppicv() {
   fetchIppicv "$IPPICV_ANDROID_X86" "$IPPICV_ANDROID_X86_SHA256"
   fetchIppicv "$IPPICV_WINDOWS_X64" "$IPPICV_WINDOWS_X64_SHA256"
   fetchIppicv "$IPPICV_MACOS_X86_64" "$IPPICV_MACOS_X86_64_SHA256"
+}
+
+# Arm's HAL for aarch64 (SPEC O5), the version OpenCV's hal/kleidicv/kleidicv.cmake pins.
+fetchKleidicv() {
+  fetchIntoDownloadCache kleidicv \
+    "https://gitlab.arm.com/kleidi/kleidicv/-/archive/${KLEIDICV_VERSION}/kleidicv-${KLEIDICV_VERSION}.tar.gz" \
+    "$KLEIDICV_SHA256"
 }
 
 copyBuildScripts() {
@@ -56,6 +68,7 @@ packSource() {
 mkdir -p "$stage_dir"
 fetchOpencv
 fetchAllIppicv
+fetchKleidicv
 copyBuildScripts
 packSource
 rm -rf "$work_dir"
