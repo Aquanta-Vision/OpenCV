@@ -22,7 +22,11 @@ checkSlicesMatch() {
     echo "macOS slices link different libraries" >&2
     exit 1
   }
-  diff -r "$arm64_dir/lib/cmake" "$x86_64_dir/lib/cmake" || {
+  # The only expected difference: libpng's arm64 build adds NEON assembly, so its link interface
+  # languages read "ASM;C" there and "C" on x86_64. The language only picks the link driver,
+  # where C/C++ outrank ASM, so the arm64 value is right for both slices.
+  diff -r -I 'IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "\(ASM;\)\{0,1\}C"' \
+    "$arm64_dir/lib/cmake" "$x86_64_dir/lib/cmake" || {
     echo "macOS slices generated different CMake packages" >&2
     exit 1
   }
