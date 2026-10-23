@@ -4,7 +4,7 @@
 # runtime dependency allowlist, and a license file for every built 3rdparty library.
 #
 # Usage: scripts/audit_linux.sh <target> <platform_dir>
-#   target: x86_64 or aarch64, as passed to build_linux.sh
+#   target: x86_64, aarch64 or cortexa9t2hf, as passed to build_linux.sh
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
@@ -35,9 +35,9 @@ selectExpectations() {
       expected_hal=KleidiCV
       allowed_deps_pattern="^($runtime_deps)\.so"
       ;;
-    *)
+    cortexa9t2hf)
       expected_gui=NONE
-      expected_hal=
+      expected_hal=carotene
       allowed_deps_pattern="^($runtime_deps)\.so"
       ;;
   esac
@@ -53,7 +53,7 @@ checkHal() {
 buildAuditProgram() {
   audit_build_dir="$(mktemp -d)"
   cmake -S "$script_dir/audit" -B "$audit_build_dir" -G Ninja \
-    -DCMAKE_CXX_COMPILER="$TARGET_CXX" -DCMAKE_BUILD_TYPE=Release \
+    "${TARGET_CMAKE_FLAGS[@]}" -DCMAKE_BUILD_TYPE=Release \
     -DOpenCV_DIR="$platform_dir/lib/cmake/opencv4" >/dev/null
   cmake --build "$audit_build_dir" >/dev/null
   audit_bin="$audit_build_dir/audit"

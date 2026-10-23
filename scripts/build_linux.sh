@@ -2,7 +2,7 @@
 # Builds the linux-<target> OpenCV static libraries from an extracted release source archive.
 #
 # Usage: scripts/build_linux.sh <target> <source_root> <out_dir>
-#   target:      x86_64 or aarch64 (native build)
+#   target:      x86_64 or aarch64 (native build), or cortexa9t2hf (Poky SDK cross build)
 #   source_root: the extracted pam-opencv-<version> directory (from make_source.sh)
 #   out_dir:     where the platform tree (include/, lib/, LICENSE, licenses/, BUILDINFO.txt) is
 #                installed
@@ -27,10 +27,12 @@ build_dir="$source_root/build-$platform"
 
 # x86_64: IPP, and GTK3 from the system for highgui (never shipped).
 # aarch64: headless, KleidiCV (SPEC O5); IPP is x86 only.
+# cortexa9t2hf: headless, NEON with Carotene (KleidiCV is aarch64 only).
 selectPlatformFlags() {
   case "$target" in
     x86_64) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=ON -DWITH_GTK=ON -DWITH_GTK_2_X=OFF) ;;
     aarch64) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=OFF -DWITH_GTK=OFF -DWITH_KLEIDICV=ON) ;;
+    cortexa9t2hf) PLATFORM_CMAKE_FLAGS=(-DWITH_IPP=OFF -DWITH_GTK=OFF -DENABLE_NEON=ON) ;;
     *)
       echo "Unsupported linux target: $target" >&2
       exit 1
@@ -42,8 +44,7 @@ selectPlatformFlags() {
 configureOpencv() {
   CMAKE_FLAGS=(
     -G Ninja
-    -DCMAKE_C_COMPILER="$TARGET_CC"
-    -DCMAKE_CXX_COMPILER="$TARGET_CXX"
+    "${TARGET_CMAKE_FLAGS[@]}"
     -DCMAKE_INSTALL_PREFIX="$out_dir"
     -DOPENCV_DOWNLOAD_PATH="$source_root/opencv-downloads"
     "${COMMON_CMAKE_FLAGS[@]}"

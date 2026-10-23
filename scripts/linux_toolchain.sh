@@ -23,8 +23,10 @@ loadPokySdk() {
   set -u
 }
 
-# Sets TARGET_CC, TARGET_CXX, TARGET_READELF and TARGET_RUNNER (the command prefix that runs a
-# target binary).
+# Sets TARGET_CC, TARGET_CXX, TARGET_READELF, TARGET_RUNNER (the command prefix that runs a
+# target binary) and TARGET_CMAKE_FLAGS (how CMake finds the compilers). The Poky SDK's $CC
+# carries its CPU flags, so cross builds use the SDK's toolchain file instead of
+# CMAKE_C_COMPILER.
 loadLinuxToolchain() {
   case "$1" in
     x86_64)
@@ -33,6 +35,7 @@ loadLinuxToolchain() {
       TARGET_CXX=c++
       TARGET_READELF=readelf
       TARGET_RUNNER=(env)
+      TARGET_CMAKE_FLAGS=(-DCMAKE_C_COMPILER="$TARGET_CC" -DCMAKE_CXX_COMPILER="$TARGET_CXX")
       ;;
     # Ubuntu 18.04's default GCC 7.5 is older than KleidiCV's minimum (8.4); gcc-8 comes from the
     # same release's archive and shares its libstdc++.so.6, so the glibc floor is unchanged.
@@ -42,6 +45,7 @@ loadLinuxToolchain() {
       TARGET_CXX=g++-8
       TARGET_READELF=readelf
       TARGET_RUNNER=(env)
+      TARGET_CMAKE_FLAGS=(-DCMAKE_C_COMPILER="$TARGET_CC" -DCMAKE_CXX_COMPILER="$TARGET_CXX")
       ;;
     cortexa9t2hf)
       loadPokySdk
@@ -49,6 +53,7 @@ loadLinuxToolchain() {
       TARGET_CXX="$CXX"
       TARGET_READELF="${poky_cross_prefix}readelf"
       TARGET_RUNNER=(qemu-arm -L "$SDKTARGETSYSROOT")
+      TARGET_CMAKE_FLAGS=(-DCMAKE_TOOLCHAIN_FILE="$OE_CMAKE_TOOLCHAIN_FILE")
       ;;
     *)
       echo "Unsupported linux target: $1" >&2
