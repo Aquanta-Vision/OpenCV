@@ -22,6 +22,7 @@ licenseName() {
   case "$1" in
     tegra_hal) echo carotene ;;
     kleidicv_hal | kleidicv_thread) echo kleidicv ;;
+    libcpufeatures) echo cpufeatures ;;
     *) echo "$1" ;;
   esac
 }
