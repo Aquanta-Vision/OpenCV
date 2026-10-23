@@ -18,6 +18,8 @@ source "$script_dir/../opencv.env"
 source "$script_dir/common_cmake.sh"
 # shellcheck source=linux_toolchain.sh
 source "$script_dir/linux_toolchain.sh"
+# shellcheck source=hal_licenses.sh
+source "$script_dir/hal_licenses.sh"
 
 platform="linux-$target"
 opencv_dir="$source_root/opencv-${OPENCV_VERSION}"
@@ -73,6 +75,7 @@ buildInformation() {
 writeLicenseAndBuildInfo() {
   cp "$opencv_dir/LICENSE" "$out_dir/LICENSE"
   cp "$opencv_dir/COPYRIGHT" "$out_dir/licenses/opencv-COPYRIGHT"
+  installHalLicenses "$opencv_dir" "$build_dir" "$out_dir/licenses"
   {
     echo "OpenCV ${OPENCV_VERSION} (commit ${OPENCV_COMMIT}, https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz, sha256 ${OPENCV_SHA256})"
     echo "Platform: $platform"
