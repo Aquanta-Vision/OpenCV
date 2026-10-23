@@ -38,10 +38,12 @@ selectExpectations() {
   esac
 }
 
+# OpenCV's top-level Windows config picks <arch>/<vc>/staticlib only when asked for static
+# libraries; PAM passes OpenCV_STATIC=ON the same way.
 buildAuditProgram() {
   audit_build_dir="$(mktemp -d)"
   cmake -S "$(cmakePath "$script_dir/audit")" -B "$(cmakePath "$audit_build_dir")" -G Ninja \
-    -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE=Release -DOpenCV_STATIC=ON \
     -DOpenCV_DIR="$(cmakePath "$platform_dir")" >/dev/null
   cmake --build "$(cmakePath "$audit_build_dir")" >/dev/null
   audit_bin="$audit_build_dir/audit.exe"

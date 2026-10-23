@@ -9,6 +9,13 @@ libraries, OpenCV's CMake package, `LICENSE`, `licenses/` with every 3rdparty no
 `BUILDINFO.txt` with the exact CMake flags and `cv::getBuildInformation()`), the
 `pam-opencv-<version>-source.tar.xz` every platform was built from, and `SHA256SUMS`.
 
+## Using a release
+
+Point `OpenCV_DIR` at the extracted platform directory's CMake package (`lib/cmake/opencv4` on
+Linux, the directory root on Windows) and `find_package(OpenCV ...)`. On Windows also set
+`OpenCV_STATIC=ON`: OpenCV's top-level Windows config otherwise looks for DLL builds and reports
+no compatible binaries.
+
 ## Releasing
 
 1. Edit `opencv.env` (upstream version, commit and SHA256, IPP ICV packages) or the build scripts.
